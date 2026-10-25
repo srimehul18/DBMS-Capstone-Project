@@ -1,4 +1,3 @@
-
 import ModulePage from "./ModulePage";
 import { residents } from "../data/demoData";
 
@@ -20,11 +19,12 @@ export default function Residents() {
       columns={columns}
       searchKeys={["name", "apartment", "phone", "email", "role"]}
       addLabel="Add Resident"
+      apiEndpoint="/residents"
       fields={[
         { key: "name", label: "Full Name" },
         { key: "apartment", label: "Apartment Number" },
         { key: "phone", label: "Phone Number", type: "tel" },
-        { key: "email", label: "Email", type: "email" },
+        { key: "email", label: "Email", type: "email", required: false },
         { key: "role", label: "Resident Role", options: ["Owner", "Tenant"] },
         { key: "status", label: "Status", options: ["Active", "Inactive"] },
       ]}

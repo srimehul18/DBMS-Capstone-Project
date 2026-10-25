@@ -8,18 +8,19 @@ import {
   ClipboardList,
   BriefcaseBusiness,
   CarFront,
+  Car,
   CalendarDays,
   ShieldCheck,
   ChevronLeft,
-  Leaf,
-} from "lucide-react";
+  Leaf
+} from "lucide-react"
 
 const navigation = [
   {
     title: "OVERVIEW",
     items: [
-      { name: "Dashboard", icon: LayoutDashboard },
-    ],
+      { name: "Dashboard", icon: LayoutDashboard }
+    ]
   },
   {
     title: "SOCIETY MANAGEMENT",
@@ -29,24 +30,23 @@ const navigation = [
       { name: "Maintenance", icon: ReceiptText },
       { name: "Payments", icon: Wallet },
       { name: "Complaints", icon: ClipboardList },
-      { name: "Staff", icon: BriefcaseBusiness },
-    ],
+      { name: "Staff", icon: BriefcaseBusiness }
+    ]
   },
   {
     title: "FACILITIES",
     items: [
-      { name: "Parking", icon: CarFront },
       { name: "Amenities", icon: CalendarDays },
-      { name: "Visitors", icon: ShieldCheck },
-    ],
-  },
-];
+      { name: "Visitors", icon: ShieldCheck }
+    ]
+  }
+]
 
 export default function Sidebar({
   activePage,
   setActivePage,
   collapsed,
-  setCollapsed,
+  setCollapsed
 }) {
   return (
     <aside
@@ -82,7 +82,7 @@ export default function Sidebar({
 
             <div className="space-y-1">
               {group.items.map(({ name, icon: Icon }) => {
-                const active = activePage === name;
+                const active = activePage === name
 
                 return (
                   <button
@@ -107,7 +107,7 @@ export default function Sidebar({
                       <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[#16a995]" />
                     )}
                   </button>
-                );
+                )
               })}
             </div>
           </div>
@@ -127,5 +127,5 @@ export default function Sidebar({
         </button>
       </div>
     </aside>
-  );
+  )
 }

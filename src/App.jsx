@@ -1,4 +1,3 @@
-
 import AppLayout from "./layouts/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import Apartments from "./pages/Apartments";
@@ -7,7 +6,6 @@ import Maintenance from "./pages/Maintenance";
 import Payments from "./pages/Payments";
 import Complaints from "./pages/Complaints";
 import Staff from "./pages/Staff";
-import Parking from "./pages/Parking";
 import Amenities from "./pages/Amenities";
 import Visitors from "./pages/Visitors";
 import { useState } from "react";
@@ -20,7 +18,6 @@ const pages = {
   Payments,
   Complaints,
   Staff,
-  Parking,
   Amenities,
   Visitors,
 };
