@@ -1,34 +1,63 @@
 
-import ModulePage from "./ModulePage";
-import { visitors } from "../data/demoData";
+import ModulePage from "./ModulePage"
 
 const columns = [
   { key: "id", label: "Visitor ID" },
   { key: "name", label: "Visitor Name" },
   { key: "apartment", label: "Visiting Apartment" },
+  { key: "phone", label: "Phone" },
   { key: "purpose", label: "Purpose" },
-  { key: "entry", label: "Entry Time" },
-  { key: "exit", label: "Exit Time" },
-  { key: "status", label: "Status", status: true },
-];
+  { key: "entryTime", label: "Entry Time" },
+  { key: "exitTime", label: "Exit Time" },
+  { key: "status", label: "Status", status: true }
+]
 
-export default function Visitors() {
+export default function Visitors({ role, resident }) {
   return (
     <ModulePage
       title="Visitors"
-      description="View visitor registrations, entry times and exit records."
-      initialData={visitors}
+      description="Register visitors and automatically record their entry in the Security Log."
+      apiEndpoint="/visitors"
       columns={columns}
-      searchKeys={["id", "name", "apartment", "purpose", "status"]}
-      addLabel="Register Visitor"
+      searchKeys={[
+        "id",
+        "name",
+        "apartment",
+        "phone",
+        "purpose",
+        "status"
+      ]}
+      addLabel="Register & Check In"
+      role={role}
+      resident={resident}
+      allowAdd={role === "Secretary" || role === "Staff"}
+      allowEdit={false}
+      allowDelete={false}
       fields={[
-        { key: "name", label: "Visitor Name" },
-        { key: "apartment", label: "Visiting Apartment" },
-        { key: "purpose", label: "Purpose of Visit" },
-        { key: "entry", label: "Entry Time", placeholder: "e.g. 2:30 PM" },
-        { key: "exit", label: "Exit Time", required: false, placeholder: "Leave blank if still inside" },
-        { key: "status", label: "Status", options: ["Active", "Completed"] },
+        {
+          key: "residentId",
+          label: "Resident ID",
+          type: "number",
+          placeholder: "Enter an existing Resident ID"
+        },
+        {
+          key: "name",
+          label: "Visitor Name",
+          placeholder: "Enter visitor name"
+        },
+        {
+          key: "phone",
+          label: "Phone Number",
+          placeholder: "Enter phone number",
+          required: false
+        },
+        {
+          key: "purpose",
+          label: "Purpose of Visit",
+          placeholder: "e.g. Delivery, Guest, Maintenance",
+          required: false
+        }
       ]}
     />
-  );
+  )
 }

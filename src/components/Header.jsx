@@ -1,13 +1,36 @@
 
-import { Search, Bell, ChevronDown } from "lucide-react";
+import { Search, Bell, ChevronDown } from "lucide-react"
 
-export default function Header({ activePage }) {
+export default function Header({ activePage, role, resident }) {
+  const displayName =
+    role === "Resident"
+      ? resident?.name || "Resident"
+      : role === "Secretary"
+        ? "Secretary"
+        : role === "Staff"
+          ? "Staff"
+          : "User"
+
+  const displayRole =
+    role === "Secretary"
+      ? "Administrator"
+      : role || "User"
+
+  const initials = displayName
+    .trim()
+    .split(/\s+/)
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase()
+
   return (
     <header className="flex min-h-[84px] flex-wrap items-center justify-between gap-4 border-b border-[#e5efed] bg-white px-5 py-4 sm:px-8">
       <div>
         <p className="mb-1 text-xs font-medium text-[#78918c]">
           MySociety / {activePage}
         </p>
+
         <h2 className="text-xl font-bold text-[#183b37]">
           {activePage}
         </h2>
@@ -16,6 +39,7 @@ export default function Header({ activePage }) {
       <div className="flex items-center gap-3 sm:gap-5">
         <label className="hidden items-center gap-2 rounded-xl border border-[#e5efed] bg-[#f8fcfb] px-3 py-2.5 md:flex">
           <Search size={17} className="text-[#78918c]" />
+
           <input
             type="search"
             placeholder="Search anything..."
@@ -33,19 +57,27 @@ export default function Header({ activePage }) {
 
         <div className="hidden h-9 w-px bg-[#e5efed] sm:block" />
 
-        <button className="flex items-center gap-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#d8f4ed] text-sm font-bold text-[#176b5b]">
-            AD
+        <div className="flex items-center gap-2">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#d8f4ed] text-sm font-bold text-[#176b5b]">
+            {initials}
           </div>
+
           <div className="hidden text-left sm:block">
-            <p className="text-sm font-semibold text-[#183b37]">
-              Admin
+            <p className="max-w-40 truncate text-sm font-semibold text-[#183b37]">
+              {displayName}
             </p>
-            <p className="text-xs text-[#78918c]">Administrator</p>
+
+            <p className="text-xs text-[#78918c]">
+              {displayRole}
+            </p>
           </div>
-          <ChevronDown size={15} className="hidden text-[#78918c] sm:block" />
-        </button>
+
+          <ChevronDown
+            size={15}
+            className="hidden text-[#78918c] sm:block"
+          />
+        </div>
       </div>
     </header>
-  );
+  )
 }

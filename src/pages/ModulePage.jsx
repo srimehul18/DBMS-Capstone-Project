@@ -1,20 +1,25 @@
-
 import { useEffect, useState } from "react"
 import { Plus } from "lucide-react"
 import DataTable from "../components/DataTable"
 import Modal from "../components/Modal"
 
 const API_BASE = "http://localhost:5000/api"
+const EMPTY_DATA = []
 
 export default function ModulePage({
   title,
   description,
-  initialData = [],
+  initialData = EMPTY_DATA,
   columns,
   searchKeys,
   fields,
   addLabel,
-  apiEndpoint
+  apiEndpoint,
+  role,
+  resident,
+  allowAdd,
+  allowEdit,
+  allowDelete
 }) {
   const [records, setRecords] = useState(initialData)
   const [modalOpen, setModalOpen] = useState(false)
@@ -25,10 +30,25 @@ export default function ModulePage({
   const [deletingId, setDeletingId] = useState(null)
   const [error, setError] = useState("")
 
+  const isResident = role === "Resident"
+  const canManage = role === "Secretary" || role === "Staff"
+
+  const canAdd = allowAdd ?? canManage
+  const canEdit = allowEdit ?? canManage
+  const canDelete = allowDelete ?? canManage
+
   useEffect(() => {
     if (!apiEndpoint) {
       setRecords(initialData)
       setLoading(false)
+      setError("")
+      return
+    }
+
+    if (isResident && !resident?.id) {
+      setRecords([])
+      setLoading(false)
+      setError("Please select a resident to view records.")
       return
     }
 
@@ -39,7 +59,13 @@ export default function ModulePage({
       setError("")
 
       try {
-        const response = await fetch(`${API_BASE}${apiEndpoint}`, {
+        const url = new URL(`${API_BASE}${apiEndpoint}`)
+
+        if (isResident && resident?.id) {
+          url.searchParams.set("residentId", resident.id)
+        }
+
+        const response = await fetch(url.toString(), {
           signal: controller.signal
         })
 
@@ -49,10 +75,11 @@ export default function ModulePage({
           throw new Error(result.message || "Unable to load records.")
         }
 
-        setRecords(result)
+        setRecords(Array.isArray(result) ? result : [])
       } catch (err) {
         if (err.name !== "AbortError") {
           setError(err.message || "Something went wrong.")
+          setRecords([])
         }
       } finally {
         if (!controller.signal.aborted) {
@@ -64,17 +91,33 @@ export default function ModulePage({
     fetchRecords()
 
     return () => controller.abort()
-  }, [apiEndpoint, initialData])
+  }, [apiEndpoint, initialData, role, resident?.id])
 
   function openForm() {
+    if (!canAdd) return
+
     setEditingRecord(null)
-    setForm({})
+
+    setForm(
+      Object.fromEntries(
+        fields.map((field) => [
+          field.key,
+          field.key === "status" && field.options
+            ? field.options[0]
+            : ""
+        ])
+      )
+    )
+
     setError("")
     setModalOpen(true)
   }
 
   function openEditForm(record) {
+    if (!canEdit) return
+
     setEditingRecord(record)
+
     setForm(
       Object.fromEntries(
         fields.map((field) => [
@@ -83,12 +126,19 @@ export default function ModulePage({
         ])
       )
     )
+
     setError("")
     setModalOpen(true)
   }
 
   async function handleSubmit(event) {
     event.preventDefault()
+
+    if (editingRecord ? !canEdit : !canAdd) {
+      setError("You do not have permission to perform this action.")
+      return
+    }
+
     setError("")
     setSaving(true)
 
@@ -120,6 +170,7 @@ export default function ModulePage({
       }
 
       const isEditing = Boolean(editingRecord)
+
       const url = isEditing
         ? `${API_BASE}${apiEndpoint}/${editingRecord.id}`
         : `${API_BASE}${apiEndpoint}`
@@ -129,7 +180,25 @@ export default function ModulePage({
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify(form)
+
+        body: JSON.stringify(
+          isResident && apiEndpoint === "/complaints"
+            ? {
+              ...form,
+              residentId: resident.id,
+              status: "Open",
+              priority: "Medium",
+              staffId: null
+            }
+            : isResident && apiEndpoint === "/amenity-bookings"
+              ? {
+                ...form,
+                residentId: resident?.id,
+                status: form.status || "Pending"
+              }
+              : form
+        )
+
       })
 
       const result = await response.json()
@@ -159,6 +228,8 @@ export default function ModulePage({
   }
 
   async function handleDelete(record) {
+    if (!canDelete) return
+
     const confirmed = window.confirm(
       `Are you sure you want to delete this ${title.toLowerCase()} record?`
     )
@@ -178,7 +249,9 @@ export default function ModulePage({
 
       const response = await fetch(
         `${API_BASE}${apiEndpoint}/${record.id}`,
-        { method: "DELETE" }
+        {
+          method: "DELETE"
+        }
       )
 
       const result = await response.json().catch(() => ({}))
@@ -201,26 +274,41 @@ export default function ModulePage({
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-sm text-[#78918c]">Society management</p>
+          <p className="text-sm text-[#78918c]">
+            Society management
+          </p>
+
           <h1 className="mt-1 text-2xl font-bold text-[#183b37]">
             {title}
           </h1>
+
           <p className="mt-2 text-sm text-[#78918c]">
             {description}
           </p>
+
+          {isResident && resident && (
+            <p className="mt-2 text-sm font-medium text-[#118575]">
+              Resident: {resident.name} · Apartment {resident.apartment}
+            </p>
+          )}
         </div>
 
-        <button
-          onClick={openForm}
-          className="flex items-center gap-2 rounded-xl bg-[#16a995] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#118575]"
-        >
-          <Plus size={18} />
-          {addLabel || "Add Record"}
-        </button>
+        {canAdd && (
+          <button
+            onClick={openForm}
+            className="flex items-center gap-2 rounded-xl bg-[#16a995] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#118575]"
+          >
+            <Plus size={18} />
+            {addLabel || "Add Record"}
+          </button>
+        )}
       </div>
 
       {loading && (
-        <p className="text-sm text-[#78918c]" role="status">
+        <p
+          className="text-sm text-[#78918c]"
+          role="status"
+        >
           Loading records...
         </p>
       )}
@@ -231,24 +319,33 @@ export default function ModulePage({
           role="alert"
         >
           {error}
-          {apiEndpoint && " Check that the backend is running and try again."}
+          {apiEndpoint &&
+            " Check that the backend is running and try again."}
         </div>
       )}
 
       {!loading && (
         <DataTable
-          title={`All ${title.toLowerCase()}`}
-          description="Browse and search your society records."
+          title={
+            isResident
+              ? `Your ${title.toLowerCase()}`
+              : `All ${title.toLowerCase()}`
+          }
+          description={
+            isResident
+              ? "Records associated with your resident profile."
+              : "Browse and search your society records."
+          }
           columns={columns}
           data={records}
           searchKeys={searchKeys}
-          onEdit={openEditForm}
-          onDelete={handleDelete}
+          onEdit={canEdit ? openEditForm : undefined}
+          onDelete={canDelete ? handleDelete : undefined}
           deletingId={deletingId}
         />
       )}
 
-      {modalOpen && (
+      {modalOpen && (editingRecord ? canEdit : canAdd) && (
         <Modal
           title={
             editingRecord
@@ -259,10 +356,15 @@ export default function ModulePage({
             if (!saving) {
               setModalOpen(false)
               setEditingRecord(null)
+              setError("")
             }
           }}
         >
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-4"
+          >
+
             {fields.map((field) => (
               <div key={field.key}>
                 <label className="mb-1.5 block text-sm font-medium text-[#53776e]">
@@ -282,18 +384,27 @@ export default function ModulePage({
                     className="w-full rounded-xl border border-[#dcebe7] bg-white px-3 py-2.5 text-sm text-[#183b37]"
                   >
                     <option value="">
-                      Select {field.label.toLowerCase()}
+                      {field.placeholder || `Select ${field.label.toLowerCase()}`}
                     </option>
-                    {field.options.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
+
+                    {field.options.map((option) => {
+                      const value =
+                        typeof option === "string" ? option : option.value
+
+                      const label =
+                        typeof option === "string" ? option : option.label
+
+                      return (
+                        <option key={value} value={value}>
+                          {label}
+                        </option>
+                      )
+                    })}
                   </select>
                 ) : (
                   <input
                     required={field.required !== false}
-                    type={field.type || "text"}
+                    type={field.dateTime ? "datetime-local" : field.type || "text"}
                     placeholder={
                       field.placeholder ||
                       `Enter ${field.label.toLowerCase()}`
@@ -311,8 +422,12 @@ export default function ModulePage({
               </div>
             ))}
 
+
             {error && modalOpen && (
-              <p className="text-sm text-red-600" role="alert">
+              <p
+                className="text-sm text-red-600"
+                role="alert"
+              >
                 {error}
               </p>
             )}
@@ -324,6 +439,7 @@ export default function ModulePage({
                 onClick={() => {
                   setModalOpen(false)
                   setEditingRecord(null)
+                  setError("")
                 }}
                 className="rounded-xl border border-[#dcebe7] px-4 py-2.5 text-sm font-semibold text-[#53776e] hover:bg-[#f5fbfa] disabled:opacity-50"
               >

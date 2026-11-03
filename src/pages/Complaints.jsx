@@ -11,7 +11,75 @@ const columns = [
   { key: "assignedStaff", label: "Assigned Staff" }
 ]
 
-export default function Complaints() {
+export default function Complaints({ role, resident }) {
+  const isResident = role === "Resident"
+
+  const fields = [
+    ...(!isResident
+      ? [
+          {
+            key: "residentId",
+            label: "Resident ID",
+            type: "number",
+            placeholder: "Enter an existing resident ID"
+          }
+        ]
+      : []),
+    ...(!isResident
+      ? [
+          {
+            key: "staffId",
+            label: "Assigned Staff ID (optional)",
+            type: "number",
+            required: false,
+            placeholder: "Leave blank if unassigned"
+          }
+        ]
+      : []),
+    {
+      key: "title",
+      label: "Complaint Title",
+      placeholder: "Enter complaint title"
+    },
+    {
+      key: "description",
+      label: "Description",
+      placeholder: "Describe the complaint",
+      required: false
+    },
+    {
+      key: "category",
+      label: "Category",
+      options: [
+        "Plumbing",
+        "Electrical",
+        "Cleaning",
+        "Security",
+        "Maintenance",
+        "Other"
+      ]
+    },
+    ...(!isResident
+      ? [
+          {
+            key: "priority",
+            label: "Priority",
+            options: ["Low", "Medium", "High"]
+          },
+          {
+            key: "status",
+            label: "Status",
+            options: [
+              "Open",
+              "In Progress",
+              "Resolved",
+              "Closed"
+            ]
+          }
+        ]
+      : [])
+  ]
+
   return (
     <ModulePage
       title="Complaints"
@@ -19,6 +87,7 @@ export default function Complaints() {
       initialData={[]}
       columns={columns}
       searchKeys={[
+        "id",
         "resident",
         "title",
         "category",
@@ -28,59 +97,12 @@ export default function Complaints() {
       ]}
       addLabel="Add Complaint"
       apiEndpoint="/complaints"
-      fields={[
-        {
-          key: "residentId",
-          label: "Resident ID",
-          type: "number",
-          placeholder: "Enter an existing resident ID"
-        },
-        {
-          key: "staffId",
-          label: "Assigned Staff ID (optional)",
-          type: "number",
-          required: false,
-          placeholder: "Leave blank if unassigned"
-        },
-        {
-          key: "title",
-          label: "Complaint Title",
-          placeholder: "Enter complaint title"
-        },
-        {
-          key: "description",
-          label: "Description",
-          placeholder: "Describe the complaint",
-          required: false
-        },
-        {
-          key: "category",
-          label: "Category",
-          options: [
-            "Plumbing",
-            "Electrical",
-            "Cleaning",
-            "Security",
-            "Maintenance",
-            "Other"
-          ]
-        },
-        {
-          key: "priority",
-          label: "Priority",
-          options: ["Low", "Medium", "High"]
-        },
-        {
-          key: "status",
-          label: "Status",
-          options: [
-            "Open",
-            "In Progress",
-            "Resolved",
-            "Closed"
-          ]
-        }
-      ]}
+      role={role}
+      resident={resident}
+      allowAdd={role === "Secretary" || isResident}
+      allowEdit={role === "Secretary" || role === "Staff"}
+      allowDelete={role === "Secretary"}
+      fields={fields}
     />
   )
 }

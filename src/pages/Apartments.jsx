@@ -11,7 +11,9 @@ const columns = [
   { key: "status", label: "Status", status: true }
 ]
 
-export default function Apartments() {
+export default function Apartments({ role, resident }) {
+  const isSecretary = role === "Secretary"
+
   return (
     <ModulePage
       title="Apartments"
@@ -21,6 +23,11 @@ export default function Apartments() {
       searchKeys={["apartment", "block", "type", "status"]}
       addLabel="Add Apartment"
       apiEndpoint="/apartments"
+      role={role}
+      resident={resident}
+      allowAdd={isSecretary}
+      allowEdit={isSecretary}
+      allowDelete={isSecretary}
       fields={[
         {
           key: "apartment",

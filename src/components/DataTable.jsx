@@ -3,8 +3,35 @@ import { Search, Plus, Inbox, Pencil, Trash2 } from "lucide-react"
 import { useMemo, useState } from "react"
 import StatusBadge from "./StatusBadge"
 
-const renderCellValue = (value) => {
+
+
+
+const renderCellValue = (value, column) => {
   if (value == null || value === "") return "—"
+
+  if (typeof value === "string") {
+    const isoMatch = value.match(
+      /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/
+    )
+
+    if (isoMatch) {
+      const [, year, month, day, hour, minute] = isoMatch
+      const hours24 = Number(hour)
+      const hours12 = hours24 % 12 || 12
+      const period = hours24 >= 12 ? "PM" : "AM"
+
+      return `${day}-${month}-${year}, ${hours12}:${minute} ${period}`
+    }
+
+    if (column?.date) {
+      const dateMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+
+      if (dateMatch) {
+        const [, year, month, day] = dateMatch
+        return `${day}-${month}-${year}`
+      }
+    }
+  }
 
   if (typeof value === "object") {
     if (Array.isArray(value)) {
@@ -20,6 +47,9 @@ const renderCellValue = (value) => {
 
   return value
 }
+
+
+
 
 export default function DataTable({
   title,
@@ -136,9 +166,9 @@ export default function DataTable({
                       {column.render ? (
                         column.render(value, row)
                       ) : column.status ? (
-                        <StatusBadge status={renderCellValue(value)} />
+                        <StatusBadge status={renderCellValue(value, column)} />
                       ) : (
-                        renderCellValue(value)
+                        renderCellValue(value, column)
                       )}
                     </td>
                   )
