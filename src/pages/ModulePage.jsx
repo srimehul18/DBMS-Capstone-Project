@@ -29,6 +29,7 @@ export default function ModulePage({
   const [saving, setSaving] = useState(false)
   const [deletingId, setDeletingId] = useState(null)
   const [error, setError] = useState("")
+  const [fieldOptions, setFieldOptions] = useState({})
 
   const isResident = role === "Resident"
   const canManage = role === "Secretary" || role === "Staff"
@@ -92,6 +93,58 @@ export default function ModulePage({
 
     return () => controller.abort()
   }, [apiEndpoint, initialData, role, resident?.id])
+
+  useEffect(() => {
+    if (!modalOpen) return
+
+    const dynamicFields = fields.filter((field) => field.optionsEndpoint)
+
+    if (!dynamicFields.length) return
+
+    let cancelled = false
+
+    async function loadFieldOptions() {
+      try {
+        for (const field of dynamicFields) {
+          const response = await fetch(
+            `${API_BASE}${field.optionsEndpoint}`
+          )
+
+          const result = await response.json()
+
+          if (!response.ok) {
+            throw new Error("Unable to load dropdown options.")
+          }
+
+          const residents = Array.isArray(result)
+            ? result
+            : Array.isArray(result.data)
+              ? result.data
+              : []
+
+          if (!cancelled) {
+            setFieldOptions((current) => ({
+              ...current,
+              [field.key]: residents.map((resident) => ({
+                value: resident.id,
+                label: `${resident.name} · Apartment ${resident.apartment || "Not assigned"}`
+              }))
+            }))
+          }
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err.message || "Unable to load dropdown options.")
+        }
+      }
+    }
+
+    loadFieldOptions()
+
+    return () => {
+      cancelled = true
+    }
+  }, [modalOpen, apiEndpoint])
 
   function openForm() {
     if (!canAdd) return
@@ -371,7 +424,7 @@ export default function ModulePage({
                   {field.label}
                 </label>
 
-                {field.options ? (
+                {field.options || fieldOptions[field.key] ? (
                   <select
                     required={field.required !== false}
                     value={form[field.key] ?? ""}
@@ -387,7 +440,7 @@ export default function ModulePage({
                       {field.placeholder || `Select ${field.label.toLowerCase()}`}
                     </option>
 
-                    {field.options.map((option) => {
+                    {(field.options || fieldOptions[field.key] || []).map((option) => {
                       const value =
                         typeof option === "string" ? option : option.value
 

@@ -1,4 +1,3 @@
-
 import ModulePage from "./ModulePage"
 
 const columns = [
@@ -36,9 +35,9 @@ export default function Visitors({ role, resident }) {
       fields={[
         {
           key: "residentId",
-          label: "Resident ID",
-          type: "number",
-          placeholder: "Enter an existing Resident ID"
+          label: "Resident",
+          optionsEndpoint: "/residents",
+          placeholder: "Select a resident"
         },
         {
           key: "name",
