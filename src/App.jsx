@@ -90,7 +90,7 @@ function RoleSelection({ onSelectRole }) {
           </h2>
 
           <p className="mt-2 text-sm text-[#78918c]">
-            Select a role to access the relevant modules
+            
           </p>
         </div>
 
@@ -121,7 +121,7 @@ function RoleSelection({ onSelectRole }) {
         </div>
 
         <p className="mt-8 text-center text-xs text-[#91a6a1]">
-          Demonstration role selection · No login required
+          ------
         </p>
       </div>
     </div>
